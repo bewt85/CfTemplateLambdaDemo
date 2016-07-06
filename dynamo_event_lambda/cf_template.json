@@ -85,14 +85,12 @@
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
         "KeyName" : { "Ref" : "KeyName" },
-        "ImageId" : "ami-99d349ea",
+        "ImageId" : "ami-f95ef58a",
         "SecurityGroups" : [ { "Fn::GetAtt": ["AppSecurityGroup", "GroupId"] } ],
         "InstanceType" : "t2.nano",
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["\n", [
             "#cloud-config",
             "---",
-            "packages:",
-            " - git",
             "write_files:",
             " -   content: |",
             { "Fn::Join" : ["", [
