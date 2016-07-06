@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the app
+
+[Service]
+TimeoutStopSec=10
+EnvironmentFile=/etc/app.conf
+ExecStart=/usr/bin/sudo -iHu ubuntu /home/ubuntu/demo_folder/server_setup/app.sh
+Restart=always
+RestartSec=5
