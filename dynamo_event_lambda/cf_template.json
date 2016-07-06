@@ -12,7 +12,7 @@
     },
     "Scale": {
       "Type": "Number",
-      "MinValue": "1",
+      "MinValue": "0",
       "MaxValue": "3",
       "Description": "Number of instances autoscale group"
     },
