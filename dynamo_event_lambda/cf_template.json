@@ -99,14 +99,7 @@
             "         APP_VERSION=\"", { "Ref" : "Version" }, "\"\n"
             ]]},
             "     path: /etc/app.conf",
-            "     permissions: '0644'",
-            "runcmd:",
-            " - /usr/bin/git clone https://github.com/bewt85/CfTemplateLambdaDemo.git /home/ubuntu/demo_folder",
-            { "Fn::Join" : ["", [
-            " - /usr/bin/git -C /home/ubuntu/demo_folder checkout ", { "Ref" : "Version" }, "\n"
-            ]]},
-            " - /bin/bash demo_folder/server_setup/setup.sh",
-            " - systemctl start app.service"
+            "     permissions: '0644'"
         ]]}}
       }
     },
