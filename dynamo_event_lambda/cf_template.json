@@ -3,7 +3,9 @@
   "Parameters" : {
     "AppName": {
       "Description": "The name of this app",
-      "Type": "String"
+      "Type": "String",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "App names contain letters and numbers; must start with a letter"
     },
     "KeyName" : {
       "Description" : "The EC2 Key Pair to allow SSH access to the instances",
@@ -14,7 +16,7 @@
       "Type": "Number",
       "MinValue": "0",
       "MaxValue": "3",
-      "Description": "Number of instances autoscale group"
+      "Description": "Number of instances in the autoscale group"
     },
     "Version": {
       "Description": "Version of the app to deploy",
@@ -28,30 +30,41 @@
     "AppSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription": "Shared between all app instances for database access",
+        "GroupDescription": "Limit access to the app instances",
         "SecurityGroupIngress": [
-            {
-              "IpProtocol": "tcp",
-              "FromPort": "80",
-              "ToPort": "80",
-              "CidrIp" : "0.0.0.0/0"
-            },
             {
               "IpProtocol": "tcp",
               "FromPort": "8443",
               "ToPort": "8443",
-              "CidrIp" : "0.0.0.0/0"
+              "SourceSecurityGroupId" : { "Ref" : "ElbSecurityGroup" }
             },
             {
               "IpProtocol": "tcp",
               "FromPort": "8080",
               "ToPort": "8080",
-              "CidrIp" : "0.0.0.0/0"
+              "SourceSecurityGroupId" : { "Ref" : "ElbSecurityGroup" }
             },
             {
               "IpProtocol": "tcp",
               "FromPort": "22",
               "ToPort": "22",
+              "CidrIp" : "0.0.0.0/0"
+            }
+        ],
+        "VpcId": { "Ref": "AppVpc" }
+      },
+      "DependsOn": "AttachVpcInternetGateway"
+    },
+
+    "ElbSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Limit access to the ELB",
+        "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "80",
+              "ToPort": "80",
               "CidrIp" : "0.0.0.0/0"
             }
         ],
@@ -138,7 +151,7 @@
           "Interval" : "30",
           "Timeout" : "5"
         },
-        "SecurityGroups": [ {"Ref": "AppSecurityGroup"} ]
+        "SecurityGroups": [ {"Ref": "ElbSecurityGroup"} ]
       },
       "DependsOn": "AttachVpcInternetGateway"
     },
@@ -246,6 +259,7 @@
   },
 
   "Outputs" : {
+    "LoadBalancer": { "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]}
   }
 }
 
