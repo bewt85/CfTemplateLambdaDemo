@@ -259,7 +259,9 @@
   },
 
   "Outputs" : {
-    "LoadBalancer": { "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]}
+    "LoadBalancer": {
+      "Value": { "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]}
+    }
   }
 }
 
