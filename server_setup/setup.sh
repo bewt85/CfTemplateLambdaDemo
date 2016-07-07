@@ -5,22 +5,25 @@ set -eu -o pipefail
 apt-get update
 apt-get install -y \
   git \
-  stunnel4
+  stunnel4 \
+  python \
+  python-pip
 
 # From Dave Dopson (http://stackoverflow.com/a/246128)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SERVICE_SCRIPT="${DIR}/app.service"
 
 cp $SERVICE_SCRIPT /etc/systemd/system
-chmod 0755 /etc/systemd/system/app.service
+chmod 0644 /etc/systemd/system/app.service
 
 chmod 0744 "${DIR}/app.sh"
 
-mkdir -p /home/ubuntu/web
-touch /etc/app.conf
-source /etc/app.conf
-echo "<h1>Hello from ${APP_NAME:-"an unknown app"}</h1>
-<p>There are (meant to be) ${APP_SCALE:-"an unknown number"} copies running</p>
-<p>I am running version ${APP_VERSION:-"who knows"} of the app</p>" >> /home/ubuntu/web/index.html
-chmod -R 0644 /home/ubuntu/web/
-chown -R ubuntu:ubuntu /home/ubuntu/web/
+pip install --upgrade pip
+pip install virtualenv
+cd $DIR
+
+if [ ! -f venv/bin/activate ]; then
+  sudo -iHu ubuntu virtualenv ${DIR}/venv -p $(which python2)
+fi
+
+sudo -iHu ubuntu ${DIR}/venv/bin/pip install -r ${DIR}/requirements.txt
