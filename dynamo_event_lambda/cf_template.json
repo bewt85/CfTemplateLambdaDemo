@@ -61,6 +61,7 @@
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "AvailabilityZones" : { "Fn::GetAZs" : ""},
+        "VPCZoneIdentifier" : ["subnet-06d95f62", "subnet-36f2356e", "subnet-4edb6f38"],
         "LaunchConfigurationName" : { "Ref" : "AppLaunchConfig" },
         "DesiredCapacity" : { "Ref": "Scale" },
         "MinSize" : "0",
@@ -107,7 +108,7 @@
     "ElasticLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
-        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+        "Subnets": ["subnet-06d95f62", "subnet-36f2356e", "subnet-4edb6f38"],
         "CrossZone" : "true",
         "Listeners" : [ {
           "LoadBalancerPort" : "80",
