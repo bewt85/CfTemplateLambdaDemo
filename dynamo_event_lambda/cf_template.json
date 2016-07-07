@@ -20,10 +20,6 @@
       "Description": "Version of the app to deploy",
       "Type": "String",
       "Default": "master"
-    },
-    "VpcId": {
-      "Type": "AWS::EC2::VPC::Id",
-      "Description": "The VPC you want to create everything in"
     }
   },
 
@@ -34,6 +30,12 @@
       "Properties" : {
         "GroupDescription": "Shared between all app instances for database access",
         "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "80",
+              "ToPort": "80",
+              "CidrIp" : "0.0.0.0/0"
+            },
             {
               "IpProtocol": "tcp",
               "FromPort": "8443",
@@ -53,15 +55,16 @@
               "CidrIp" : "0.0.0.0/0"
             }
         ],
-        "VpcId": { "Ref": "VpcId" }
-      }
+        "VpcId": { "Ref": "AppVpc" }
+      },
+      "DependsOn": "AttachVpcInternetGateway"
     },
 
     "AppScalingGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "AvailabilityZones" : { "Fn::GetAZs" : ""},
-        "VPCZoneIdentifier" : ["subnet-06d95f62", "subnet-36f2356e", "subnet-4edb6f38"],
+        "VPCZoneIdentifier" : [ {"Ref": "Subnet1"}, {"Ref": "Subnet2"}, {"Ref": "Subnet3"}],
         "LaunchConfigurationName" : { "Ref" : "AppLaunchConfig" },
         "DesiredCapacity" : { "Ref": "Scale" },
         "MinSize" : "0",
@@ -79,13 +82,15 @@
           "Timeout" : "PT15M",
           "Count"   : { "Ref": "Scale" }
         }
-      }
+      },
+      "DependsOn": "AttachVpcInternetGateway"
     },
 
     "AppLaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
         "KeyName" : { "Ref" : "KeyName" },
+        "AssociatePublicIpAddress": "true",
         "ImageId" : "ami-a4d44ed7",
         "SecurityGroups" : [ { "Fn::GetAtt": ["AppSecurityGroup", "GroupId"] } ],
         "InstanceType" : "t2.nano",
@@ -110,7 +115,7 @@
             ]]},
             " - /bin/chown -R ubuntu:ubuntu /home/ubuntu/demo_folder",
             " - /bin/chmod 0744 /home/ubuntu/demo_folder/server_setup/setup.sh",
-            " - /bin/sudo -iHu ubuntu /home/ubuntu/demo_folder/server_setup/setup.sh",
+            " - /home/ubuntu/demo_folder/server_setup/setup.sh",
             " - /bin/systemctl start app"
         ]]}}
       }
@@ -119,7 +124,7 @@
     "ElasticLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
-        "Subnets": ["subnet-06d95f62", "subnet-36f2356e", "subnet-4edb6f38"],
+        "Subnets": [ {"Ref": "Subnet1"}, {"Ref": "Subnet2"}, {"Ref": "Subnet3"}],
         "CrossZone" : "true",
         "Listeners" : [ {
           "LoadBalancerPort" : "80",
@@ -132,9 +137,112 @@
           "UnhealthyThreshold" : "5",
           "Interval" : "30",
           "Timeout" : "5"
+        },
+        "SecurityGroups": [ {"Ref": "AppSecurityGroup"} ]
+      },
+      "DependsOn": "AttachVpcInternetGateway"
+    },
+
+    "AppVpc": {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "CidrBlock" : "10.0.0.0/16"
+      }
+    },
+
+    "AttachVpcInternetGateway" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "VpcId" : { "Ref" : "AppVpc" },
+        "InternetGatewayId" : { "Ref" : "VpcInternetGateway" }
+      }
+    },
+
+    "VpcInternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {}
+    },
+
+    "Subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },
+        "CidrBlock" : "10.0.1.0/24",
+        "VpcId": { "Ref": "AppVpc" }
+      }
+    },
+
+    "Subnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },
+        "CidrBlock" : "10.0.2.0/24",
+        "VpcId": { "Ref": "AppVpc" }
+      }
+    },
+
+    "Subnet3": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select" : [ "2", { "Fn::GetAZs" : "" } ] },
+        "CidrBlock" : "10.0.3.0/24",
+        "VpcId": { "Ref": "AppVpc" }
+      }
+    },
+
+    "RouteTable": {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref": "AppVpc" }
+      }
+    },
+
+    "AppInternetRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "RouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "VpcInternetGateway" }
+      },
+      "DependsOn": "AttachVpcInternetGateway"
+    },
+
+    "Subnet1Routing": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        },
+        "SubnetId": {
+          "Ref": "Subnet1"
+        }
+      }
+    },
+
+    "Subnet2Routing": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        },
+        "SubnetId": {
+          "Ref": "Subnet2"
+        }
+      }
+    },
+
+    "Subnet3Routing": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        },
+        "SubnetId": {
+          "Ref": "Subnet3"
         }
       }
     }
+
   },
 
   "Outputs" : {
