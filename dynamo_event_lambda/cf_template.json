@@ -65,7 +65,7 @@
         "LaunchConfigurationName" : { "Ref" : "AppLaunchConfig" },
         "DesiredCapacity" : { "Ref": "Scale" },
         "MinSize" : "0",
-        "MaxSize" : "3",
+        "MaxSize" : "4",
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ]
       },
       "UpdatePolicy": {
@@ -86,12 +86,14 @@
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
         "KeyName" : { "Ref" : "KeyName" },
-        "ImageId" : "ami-f95ef58a",
+        "ImageId" : "ami-a4d44ed7",
         "SecurityGroups" : [ { "Fn::GetAtt": ["AppSecurityGroup", "GroupId"] } ],
         "InstanceType" : "t2.nano",
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["\n", [
             "#cloud-config",
             "---",
+            "packages:",
+            " - git",
             "write_files:",
             " -   content: |",
             { "Fn::Join" : ["", [
@@ -100,7 +102,16 @@
             "         APP_VERSION=\"", { "Ref" : "Version" }, "\"\n"
             ]]},
             "     path: /etc/app.conf",
-            "     permissions: '0644'"
+            "     permissions: '0644'",
+            "runcmd:",
+            " - /usr/bin/git clone https://github.com/bewt85/CfTemplateLambdaDemo.git /home/ubuntu/demo_folder",
+            { "Fn::Join" : ["", [
+            " - /usr/bin/git -C /home/ubuntu/demo_folder checkout ", { "Ref" : "Version" }, "\n"
+            ]]},
+            " - /bin/chown -R ubuntu:ubuntu /home/ubuntu/demo_folder",
+            " - /bin/chmod 0744 /home/ubuntu/demo_folder/server_setup/setup.sh",
+            " - /bin/sudo -iHu ubuntu /home/ubuntu/demo_folder/server_setup/setup.sh",
+            " - /bin/systemctl start app"
         ]]}}
       }
     },

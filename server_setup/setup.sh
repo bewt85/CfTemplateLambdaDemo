@@ -12,6 +12,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SERVICE_SCRIPT="${DIR}/app.service"
 
 cp $SERVICE_SCRIPT /etc/systemd/system
+chmod 0755 /etc/systemd/system/app.service
+
+chmod 0744 "${DIR}/app.sh"
 
 mkdir -p /home/ubuntu/web
 touch /etc/app.conf
@@ -19,4 +22,5 @@ source /etc/app.conf
 echo "<h1>Hello from ${APP_NAME:-"an unknown app"}</h1>
 <p>There are (meant to be) ${APP_SCALE:-"an unknown number"} copies running</p>
 <p>I am running version ${APP_VERSION:-"who knows"} of the app</p>" >> /home/ubuntu/web/index.html
-chmod -R 644 /home/ubuntu/web/
+chmod -R 0644 /home/ubuntu/web/
+chown -R ubuntu:ubuntu /home/ubuntu/web/
