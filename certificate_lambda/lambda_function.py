@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import cfnresponse
+import cfn_resource
 
 import boto3
 import json
@@ -12,9 +12,10 @@ import tempfile
 
 from contextlib import contextmanager
 
-
 logger = logging.getLogger('AppBackendCertificates')
+logger.setLevel(logging.DEBUG)
 
+handler = cfn_resource.Resource()
 
 @contextmanager
 def temp_filenames(number):
@@ -77,7 +78,15 @@ def upload_keys(s3_bucket, s3_key, certificate_data):
     )
 
 
-def delete_certificate_details(s3_bucket, app_name):
+def certificate_name(app_name):
+    return "backend-certificate-{}.json".format(app_name)
+
+
+@handler.delete
+def delete_certificate_details(event, context):
+    resource_properties = event.get("ResourceProperties", {})
+    app_name = resource_properties['AppName']
+    s3_bucket = resource_properties['AppS3Bucket']
     s3_key = certificate_name(app_name)
     s3_client = boto3.client("s3")
     logger.info("Deleting {}/{}".format(s3_bucket, s3_key))
@@ -90,9 +99,14 @@ def delete_certificate_details(s3_bucket, app_name):
         )
     except:
         pass
+    return {"message": "Deleted certificates for {}".format(app_name)}
 
 
-def get_certificate_details(s3_bucket, app_name, app_domain):
+def get_certificate_details(event, context):
+    resource_properties = event.get("ResourceProperties", {})
+    app_domain = resource_properties['AppDomain']
+    app_name = resource_properties['AppName']
+    s3_bucket = resource_properties['AppS3Bucket']
     s3_key = certificate_name(app_name)
     s3_client = boto3.client("s3")
     logger.info("Getting certificates from {}/{}".format(s3_bucket, s3_key))
@@ -114,42 +128,17 @@ def get_certificate_details(s3_bucket, app_name, app_domain):
             "apps_domain": app_domain
         }
         upload_keys(s3_bucket, s3_key, certificate_data)
-    return certificate_data
+    unarmoured_public_key = unarmour_key(certificate_data['public_key'])
+    return {"PublicKey": unarmoured_public_key,
+            "CertificateS3Key": s3_key,
+            "message": "Certificate is in s3://{}/{}".format(s3_bucket, s3_key)}
 
 
-def certificate_name(app_name):
-    return "backend-certificate-{}.json".format(app_name)
+@handler.create
+def create(event, context):
+    return get_certificate_details(event, context)
 
 
-def lambda_handler(event, context):
-    try:
-        logger.setLevel(logging.DEBUG)
-
-        logger.debug(json.dumps(event))
-
-        resource_properties = event.get("ResourceProperties", {})
-        app_domain = resource_properties['AppDomain']
-        app_name = resource_properties['AppName']
-        s3_bucket = resource_properties['AppS3Bucket']
-        s3_key = certificate_name(app_name)
-
-        if event.get("RequestType") == "Delete":
-            delete_certificate_details(s3_bucket, app_name)
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, {"message": "Deleted certificates for {}".format(app_name)})
-        elif event.get("RequestType") in ["Create", "Update"]:
-            certificate_data = get_certificate_details(s3_bucket, app_name, app_domain)
-            unarmoured_public_key = unarmour_key(certificate_data['public_key'])
-            response_data = {"PublicKey": unarmoured_public_key, "CertificateS3Key": s3_key, "message": "Certificate is in s3://{}/{}".format(s3_bucket, s3_key)}
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
-        else:
-            response_data = {"error": "Unexpected event '{}'; not done anything".format(event.get("RequestType", "UNKNOWN"))}
-            cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
-            exit(1)
-    except Exception as e:
-        response_data = {"error": repr(e)}
-        cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
-        exit(1)
-
-
-if __name__ == '__main__':
-    lambda_handler({},{})
+@handler.update
+def update(event, context):
+    return get_certificate_details(event, context)
