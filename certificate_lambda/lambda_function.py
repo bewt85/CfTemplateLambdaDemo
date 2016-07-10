@@ -130,10 +130,14 @@ def get_certificate_details(event, context):
         }
         upload_keys(s3_bucket, s3_key, certificate_data)
     unarmoured_public_key = unarmour_key(certificate_data['public_key'])
-    return {"PublicKey": unarmoured_public_key,
+    return {
+        "Data": {
+            "PublicKey": unarmoured_public_key,
             "CertificateS3Key": s3_key,
-            "message": "Certificate is in s3://{}/{}".format(s3_bucket, s3_key),
-            "PhysicalResourceId": event.get("PhysicalResourceId", context.log_stream_name)}
+        },
+        "message": "Certificate is in s3://{}/{}".format(s3_bucket, s3_key),
+        "PhysicalResourceId": event.get("PhysicalResourceId", context.log_stream_name)
+    }
 
 
 @handler.create
