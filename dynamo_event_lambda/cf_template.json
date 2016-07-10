@@ -391,7 +391,7 @@
 
   "Outputs" : {
     "LoadBalancer": {
-      "Value": { "Fn::GetAtt": ["ElasticLoadBalancer", "DNSName"]}
+      "Value": { "Fn::Join" : [ ".", [ { "Ref" : "AppName" }, { "Ref": "AppsDomain" }, ""]]}
     }
   }
 }
