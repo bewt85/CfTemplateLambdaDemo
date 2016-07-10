@@ -26,4 +26,5 @@ if [ ! -f venv/bin/activate ]; then
   sudo -iHu ubuntu virtualenv ${DIR}/venv -p $(which python2)
 fi
 
+sudo -iHu ubuntu ${DIR}/venv/bin/pip install boto3
 sudo -iHu ubuntu ${DIR}/venv/bin/pip install -r ${DIR}/requirements.txt
