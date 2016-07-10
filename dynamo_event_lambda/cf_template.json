@@ -11,6 +11,10 @@
       "Description": "Base domain shared between all apps",
       "Type": "String"
     },
+    "AppsDomainSSLCertificate": {
+      "Type": "String",
+      "Description": "ARN of AWS Certificate Manager certificate for *.{AppsDomain}"
+    },
     "KeyName" : {
       "Description" : "The EC2 Key Pair to allow SSH access to the instances",
       "Type" : "AWS::EC2::KeyPair::KeyName",
@@ -81,6 +85,11 @@
               "IpProtocol": "tcp",
               "FromPort": "80",
               "ToPort": "80",
+              "CidrIp" : "0.0.0.0/0"
+            }, {
+              "IpProtocol": "tcp",
+              "FromPort": "443",
+              "ToPort": "443",
               "CidrIp" : "0.0.0.0/0"
             }
         ],
@@ -230,6 +239,13 @@
           "LoadBalancerPort" : "80",
           "InstancePort" : "8080",
           "Protocol" : "HTTP"
+        }, {
+          "LoadBalancerPort" : "443",
+          "InstancePort" : "8443",
+          "Protocol" : "HTTPS",
+          "InstanceProtocol" : "HTTPS",
+          "SSLCertificateId" : { "Ref": "AppsDomainSSLCertificate" },
+          "PolicyNames" : []
         } ],
         "HealthCheck" : {
           "Target" : "TCP:8080",
@@ -238,7 +254,23 @@
           "Interval" : "30",
           "Timeout" : "5"
         },
-        "SecurityGroups": [ {"Ref": "ElbSecurityGroup"} ]
+        "SecurityGroups": [ {"Ref": "ElbSecurityGroup"} ],
+        "Policies" : [ {
+          "PolicyName": "BackendPublicKeyPolicy",
+          "PolicyType": "PublicKeyPolicyType",
+          "Attributes": [ {
+            "Name": "PublicKey",
+            "Value": { "Fn::GetAtt": ["ElbBackendCertificate", "PublicKey"]}
+          } ]
+        }, {
+          "PolicyName": "BackendServerAuthenticationPolicy",
+          "PolicyType": "BackendServerAuthenticationPolicyType",
+          "Attributes": [ {
+            "Name": "PublicKeyPolicyName",
+            "Value": "BackendPublicKeyPolicy"
+          } ],
+          "InstancePorts" : [ "8443" ]
+        } ]
       },
       "DependsOn": "AttachVpcInternetGateway"
     },
