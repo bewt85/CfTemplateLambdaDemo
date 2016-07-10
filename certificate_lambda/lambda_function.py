@@ -99,7 +99,8 @@ def delete_certificate_details(event, context):
         )
     except:
         pass
-    return {"message": "Deleted certificates for {}".format(app_name)}
+    return {"message": "Deleted certificates for {}".format(app_name),
+            "PhysicalResourceId": event.get("PhysicalResourceId", context.log_stream_name)}
 
 
 def get_certificate_details(event, context):
@@ -131,7 +132,8 @@ def get_certificate_details(event, context):
     unarmoured_public_key = unarmour_key(certificate_data['public_key'])
     return {"PublicKey": unarmoured_public_key,
             "CertificateS3Key": s3_key,
-            "message": "Certificate is in s3://{}/{}".format(s3_bucket, s3_key)}
+            "message": "Certificate is in s3://{}/{}".format(s3_bucket, s3_key),
+            "PhysicalResourceId": event.get("PhysicalResourceId", context.log_stream_name)}
 
 
 @handler.create
