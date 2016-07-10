@@ -34,6 +34,10 @@
     "CreateElbBackendCertificatesArn": {
       "Description": "ARN for the Lambda used to create backend certificates",
       "Type": "String"
+    },
+    "Route53HostedZoneId": {
+      "Description": "ID for the Route53 Hosted Zone which will hold the CNAME for this app",
+      "Type": "String"
     }
   },
 
@@ -237,6 +241,18 @@
         "SecurityGroups": [ {"Ref": "ElbSecurityGroup"} ]
       },
       "DependsOn": "AttachVpcInternetGateway"
+    },
+
+    "Route53RecordSet" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneId" : {"Ref" : "Route53HostedZoneId"},
+        "Comment" : { "Ref" : "AppName" },
+        "Name" : { "Fn::Join" : [ ".", [ { "Ref" : "AppName" }, { "Ref": "AppsDomain" }, ""]]},
+        "Type" : "CNAME",
+        "TTL" : "500",
+        "ResourceRecords" : [ { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]} ]
+      }
     },
 
     "AppVpc": {
