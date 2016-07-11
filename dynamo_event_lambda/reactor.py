@@ -89,9 +89,9 @@ class AppCfHandler(object):
             "CREATE_COMPLETE": self.updated,
             "CREATE_IN_PROGRESS": self.set_deploying,
             "CREATE_FAILED": self.create_failed,
-            "DELETE_COMPLETE": self.deleted,
+            "DELETE_COMPLETE": None,
             "DELETE_FAILED": None,
-            "DELETE_IN_PROGRESS": self.set_deleting,
+            "DELETE_IN_PROGRESS": None,
             "ROLLBACK_COMPLETE": self.update_failed,
             "ROLLBACK_FAILED": self.errors,
             "ROLLBACK_IN_PROGRESS": None,
@@ -135,14 +135,6 @@ class AppCfHandler(object):
         }
         self._update_db(app_name, update, (None, "deploying"), "deployed")
         check_stack_is_up_to_date(app_name)
-
-
-    def set_deleting(self, app_name, stack, resource_status):
-        self._update_db(app_name, {"scale": 0}, None, "deleting")
-
-
-    def deleted(self, app_name, stack, resource_status):
-        self._update_db(app_name, {"scale": 0}, None, "deleted")
 
 
     def errors(self, app_name, stack, resource_status):
