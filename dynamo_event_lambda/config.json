@@ -1,0 +1,9 @@
+{
+  "app_database": "<A dynamodb table containing app details>",
+  "AppsDomain": "<The root domain shared between all apps, must be controllable by Route53>",
+  "AppsDomainSSLCertificate": "<The ARN of a wildcard certificate for the AppsDomain, stored in Amazon Certificate Manager>",
+  "KeyName": "<The name of your SSH public key uploaded to IAM>",
+  "CertificateBucket": "<An S3 bucket to store the certificate details securing ELB <-> App traffic>",
+  "CreateElbBackendCertificatesArn": "<The ARN for the lambda function used to create SSL certificates>",
+  "Route53HostedZoneId": "<The hosted zone in Route53 used to control the AppsDomain>"
+}
