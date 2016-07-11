@@ -13,9 +13,34 @@
         {
             "Effect": "Allow",
             "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:DescribeStream",
+                "dynamodb:ListStreams",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:*:*:table/apps-demo/*",
+                "arn:aws:dynamodb:*:*:table/apps-demo"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "cloudformation:*"
             ],
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sns:Publish"
+            ],
+            "Resource": "arn:aws:sns:*:*:AppDemoCloudFormationSns"
         },
         {
             "Effect": "Allow",
@@ -135,6 +160,15 @@
                 "lambda:InvokeFunction"
             ],
             "Resource": "arn:aws:lambda:*:*:function:CreateElbBackendCertificates"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:ListBucket",
+                "s3:GetObject"
+            ],
+            "Resource": "*"
         }
     ]
 }

@@ -150,16 +150,23 @@ class AppCfHandler(object):
         attribute_values = {":{}".format(k): v for k,v in updates.items()}
         try:
             if original_statuses is not None:
-                attribute_names['#status'] = "status"
-                original_status_map = {":new_status_{}".format(i+1): v for i,v in enumerate(original_statuses)}
-                condition_expression = "#status IN ({})".format(", ".join(original_status_map.keys()))
-                attribute_values.update(original_status_map)
+                condition_expressions = []
+                if None in original_statuses:
+                    original_statuses = [status for status in original_statuses if status is not None]
+                    condition_expressions.append("attribute_not_exists(#status)")
+                    attribute_names['#status'] = "status"
+                if len(original_statuses) >= 1:
+                    attribute_names['#status'] = "status"
+                    original_status_map = {":new_status_{}".format(i+1): v for i,v in enumerate(original_statuses)}
+                    condition_expressions.append("#status IN ({})".format(", ".join(original_status_map.keys())))
+                    attribute_values.update(original_status_map)
+                assert len(condition_expressions) >= 1, "Expected some original_statuses or None"
                 app_db.update_item(
                     Key={'Name': app_name},
                     UpdateExpression=update_expression,
                     ExpressionAttributeNames=attribute_names,
                     ExpressionAttributeValues=attribute_values,
-                    ConditionExpression=condition_expression
+                    ConditionExpression=" OR ".join(condition_expressions)
                 )
             else:
                 app_db.update_item(
@@ -218,15 +225,12 @@ def check_stack_is_up_to_date(app_name):
         stack = get_app_stack(app_name)
         dynamo_data = get_app_data(app_name)
 
-        if dynamo_data is None or dynamo_data.get("status") == "delete":
-            logger.debug("Setting up {} for deletion".format(app_name))
+        if dynamo_data is None:
+            logger.debug("Deleting {}".format(app_name))
             if stack is not None:
                 stack.delete()
             return
-        if dynamo_data.get("status") in ["deleting", "deleted"]:
-            logger.debug("{} is already being deleted".format(app_name))
-            return
-        if not stack and dynamo_data.get("status") not in ["delete", "deleting", "deleted"]:
+        if not stack:
             logger.debug("Checking that {} is created".format(app_name))
             create_app_stack(app_name, int(dynamo_data['Scale']), dynamo_data['Version'])
             return
