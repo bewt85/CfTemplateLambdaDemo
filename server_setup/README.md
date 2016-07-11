@@ -1,7 +1,7 @@
 # App Instance Setup
 
 This is the app that runs on our hacky PaaS.  It is a [simple app](hello.py) written in python using the Flask
-(micro) framework which tells you about some of the configuration.
+(micro) framework which tells you about some of the configuration.  Config is dropped onto the box in `/etc/app.conf`.
 
 The code is loaded onto the instance through a git clone initiated by the UserData.  [A setup script](setup.sh) then
 installs the dependencies, sets up a [systemd unit](app.service) to run [the service](app.sh) using Twisted and starts
