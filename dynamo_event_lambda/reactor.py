@@ -34,11 +34,11 @@ def app_name_from_stack(stack_name):
 
 def parse_cf_message(message):
     return {unicode(k): unicode(v.strip("'"))
-            for k, v in dict(m.split("=")
-            for m in re.findall("(\S+=\'.*?\')", message, re.DOTALL)).items()}
+            for k, v in re.findall("(\S+)=(\'.*?\')", message, re.DOTALL)}
+
 
 def get_app_data(app_name):
-    response = app_db.get_item(Key={'name': app_name})
+    response = app_db.get_item(Key={'Name': app_name})
     return response.get("Item")
 
 
@@ -162,9 +162,8 @@ class AppCfHandler(object):
                 original_status_map = {":new_status_{}".format(i+1): v for i,v in enumerate(original_statuses)}
                 condition_expression = "#status IN ({})".format(", ".join(original_status_map.keys()))
                 attribute_values.update(original_status_map)
-
                 app_db.update_item(
-                    Key={'id': app_name},
+                    Key={'Name': app_name},
                     UpdateExpression=update_expression,
                     ExpressionAttributeNames=attribute_names,
                     ExpressionAttributeValues=attribute_values,
@@ -172,7 +171,7 @@ class AppCfHandler(object):
                 )
             else:
                 app_db.update_item(
-                    Key={'id': app_name},
+                    Key={'Name': app_name},
                     UpdateExpression=update_expression,
                     ExpressionAttributeNames=attribute_names,
                     ExpressionAttributeValues=attribute_values,
@@ -203,7 +202,7 @@ def create_app_stack(app_name, scale, version):
         "AppsDomain": config['AppsDomain'],
         "AppsDomainSSLCertificate": config['AppsDomainSSLCertificate'],
         "KeyName": config['KeyName'],
-        "Scale": scale,
+        "Scale": str(scale),
         "Version": version,
         "CertificateBucket": config['CertificateBucket'],
         "CreateElbBackendCertificatesArn": config['CreateElbBackendCertificatesArn'],
@@ -237,19 +236,24 @@ def check_stack_is_up_to_date(app_name):
             return
         if not stack and dynamo_data.get("status") not in ["delete", "deleting", "deleted"]:
             logger.debug("Checking that {} is created".format(app_name))
-            create_app_stack(app_name, dynamo_data['Scale'], dynamo_data['Version'])
+            create_app_stack(app_name, int(dynamo_data['Scale']), dynamo_data['Version'])
             return
         if not stack.stack_status.endswith("_COMPLETE"):
-            logger.debug("Stack status '{}' of {} is not handled".format(stack.stack_status, db_id))
+            logger.debug("Stack status '{}' of {} is not handled".format(stack.stack_status, app_name))
             return
 
-        dynamo_parameters = {k: dynamo_data[k] for k in ["Scale", "Version", "Name"]}
+        dynamo_parameters = {
+            "Scale": str(int(dynamo_data["Scale"])),
+            "Version": dynamo_data["Version"],
+            "AppName": dynamo_data["Name"]
+        }
         stack_parameters = stack_parameters_to_dict(stack)
-        if stack_parameters != dynamo_parameters:
+        if {k: stack_parameters.get(k) for k in dynamo_parameters.keys()} != dynamo_parameters:
             logger.debug("{} has been updated, updating stack".format(app_name))
+            stack_parameters.update(dynamo_parameters)
             stack.update(
                 TemplateBody=cf_template_content,
-                Parameters=[{"ParameterKey": k, "ParameterValue": v} for k, v in dynamo_parameters.items()],
+                Parameters=[{"ParameterKey": k, "ParameterValue": v} for k, v in stack_parameters.items()],
                 Capabilities=[
                     'CAPABILITY_IAM',
                 ],
