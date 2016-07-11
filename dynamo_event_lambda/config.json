@@ -5,5 +5,6 @@
   "KeyName": "<The name of your SSH public key uploaded to IAM>",
   "CertificateBucket": "<An S3 bucket to store the certificate details securing ELB <-> App traffic>",
   "CreateElbBackendCertificatesArn": "<The ARN for the lambda function used to create SSL certificates>",
-  "Route53HostedZoneId": "<The hosted zone in Route53 used to control the AppsDomain>"
+  "Route53HostedZoneId": "<The hosted zone in Route53 used to control the AppsDomain>",
+  "CloudFormationNotificationArn": "<ARN of the SNS topic which CloudFormation events are pushed to>"
 }
