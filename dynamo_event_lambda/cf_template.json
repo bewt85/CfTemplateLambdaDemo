@@ -391,7 +391,7 @@
 
   "Outputs" : {
     "LoadBalancer": {
-      "Value": { "Fn::Join" : [ ".", [ { "Ref" : "AppName" }, { "Ref": "AppsDomain" }, ""]]}
+      "Value": { "Fn::Join" : [ ".", [ { "Ref" : "AppName" }, { "Ref": "AppsDomain" }]]}
     }
   }
 }
