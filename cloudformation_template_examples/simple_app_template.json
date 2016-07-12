@@ -1,0 +1,165 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Parameters" : {
+    "AppName": {
+      "Description": "The name of this app",
+      "Type": "String",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "App names contain letters and numbers; must start with a letter"
+    },
+    "Scale": {
+      "Type": "Number",
+      "MinValue": "0",
+      "MaxValue": "3",
+      "Description": "Number of instances in the autoscale group",
+      "Default": "2"
+    },
+    "Version": {
+      "Description": "Version of the app to deploy",
+      "Type": "String",
+      "Default": "master"
+    }
+  },
+
+  "Mappings" : {
+    "RegionMap" : {
+      "us-east-1" : {"ami": "ami-ddf13fb0"},
+      "eu-west-1" : {"ami": "ami-a4d44ed7"}
+    }
+  },
+
+  "Resources" : {
+    "AppSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Limit access to the app instances",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "SourceSecurityGroupId": { "Fn::GetAtt": ["ElbSecurityGroup", "GroupId"] }
+          }
+        ]
+      }
+    },
+    "AppScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "LaunchConfigurationName": {
+          "Ref": "AppLaunchConfig"
+        },
+        "DesiredCapacity": {
+          "Ref": "Scale"
+        },
+        "MinSize": "0",
+        "MaxSize": "4",
+        "LoadBalancerNames": [
+          {
+            "Ref": "ElasticLoadBalancer"
+          }
+        ]
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": {
+            "Ref": "Scale"
+          },
+          "MaxBatchSize": "1"
+        }
+      }
+    },
+    "AppLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "ami" ] },
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "AppSecurityGroup",
+              "GroupId"
+            ]
+          }
+        ],
+        "InstanceType": "t2.nano",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "\n",
+              [
+                "#cloud-config",
+                "---",
+                "packages:",
+                " - git",
+                "write_files:",
+                " -   content: |",
+                { "Fn::Join": [ "", [
+                "         APP_NAME=\"", { "Ref": "AppName" }, "\"\n",
+                "         APP_SCALE=\"", { "Ref": "Scale" }, "\"\n",
+                "         APP_VERSION=\"", { "Ref": "Version" }, "\"\n"
+                ]]},
+                "     path: /etc/app.conf",
+                "     permissions: '0644'",
+                "runcmd:",
+                " - /usr/bin/git clone https://github.com/bewt85/CfTemplateLambdaDemo.git /home/ubuntu/demo_folder",
+                { "Fn::Join": [ "", [
+                " - /usr/bin/git -C /home/ubuntu/demo_folder checkout ", { "Ref": "Version" }, "\n"
+                ]]},
+                " - /bin/chown -R ubuntu:ubuntu /home/ubuntu/demo_folder",
+                " - /bin/chmod 0744 /home/ubuntu/demo_folder/server_setup/setup.sh",
+                " - /home/ubuntu/demo_folder/server_setup/setup.sh",
+                " - /bin/systemctl start app"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "ElbSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Limit access to the ELB",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "ElasticLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+        "CrossZone": "true",
+        "Listeners": [
+          {
+            "LoadBalancerPort": "80",
+            "InstancePort": "8080",
+            "Protocol": "HTTP"
+          }
+        ],
+        "HealthCheck": {
+          "Target": "TCP:8080",
+          "HealthyThreshold": "3",
+          "UnhealthyThreshold": "5",
+          "Interval": "30",
+          "Timeout": "5"
+        },
+        "SecurityGroups": [{ "Fn::GetAtt": ["ElbSecurityGroup", "GroupId"] }]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "LoadBalancer": {
+      "Value": { "Fn::GetAtt": [ "ElasticLoadBalancer", "DNSName" ]}
+    }
+  }
+}
+
