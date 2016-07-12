@@ -1,7 +1,7 @@
 # CreateElbBackendCertificates
 
 This is a Lambda function which can be used in a CloudFormation template to create self signed SSL certificates.
-These are used by the hacky PaaS to secrure the connection between an ELB and instances in an autoscaling group.
+These are used by the hacky PaaS to secure the connection between an ELB and instances in an autoscaling group.
 The certificates and their keys are stored in an S3 bucket.  Note that in this implementation, none of these
 details are encrypted.  Normally I would use KMS for this but it would have made the code less clear than
 it already is.

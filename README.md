@@ -16,7 +16,7 @@ The third example shows how Lambda can power a [Custom Resource to create SSL ce
 ## A Simple Platform as a Service
 
 This repo also includes [another Lambda function](dynamo_event_lambda) which can be used with [HTTPS Example](cloudformation_template_examples/https_app_template.json) to make something which 
-looks a little like a Platform as a Service (PaaS).  This Lambda subscibes to DynamoDB and CloudFormation events to create, update and delete CloudFormation stacks and to update the 
+looks a little like a Platform as a Service (PaaS).  This Lambda subscribes to DynamoDB and CloudFormation events to create, update and delete CloudFormation stacks and to update the
 DynamoDB Table with the results of those changes.
 
 Although similar in principle to how we build our infrastructure at [drie](https://drie.co); I have taken a number of 
