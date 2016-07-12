@@ -11,7 +11,7 @@ There are three [demo CloudFormation templates](cloudformation_template_examples
 * [VPC Example](cloudformation_template_examples/vpc_example_template.json): The Simple Example but in a custom VPC
 * [HTTPS Example](cloudformation_template_examples/https_app_template.json): The VPC Example but behind Route53 and using SSL certificates on the ELB and to secure the backend connection
 
-The third example shows how Lambda can power a Custom Resource to create SSL certificates.
+The third example shows how Lambda can power a [Custom Resource to create SSL certificates](certificate_lambda).
 
 ## A Simple Platform as a Service
 
