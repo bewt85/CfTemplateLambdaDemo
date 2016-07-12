@@ -148,7 +148,7 @@
           "Target": "TCP:8080",
           "HealthyThreshold": "3",
           "UnhealthyThreshold": "5",
-          "Interval": "30",
+          "Interval": "6",
           "Timeout": "5"
         },
         "SecurityGroups": [{ "Fn::GetAtt": ["ElbSecurityGroup", "GroupId"] }]

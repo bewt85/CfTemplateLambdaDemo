@@ -256,7 +256,7 @@
           "Target" : "TCP:8080",
           "HealthyThreshold" : "3",
           "UnhealthyThreshold" : "5",
-          "Interval" : "30",
+          "Interval" : "6",
           "Timeout" : "5"
         },
         "SecurityGroups": [ {"Ref": "ElbSecurityGroup"} ],
@@ -287,7 +287,7 @@
         "Comment" : { "Ref" : "AppName" },
         "Name" : { "Fn::Join" : [ ".", [ { "Ref" : "AppName" }, { "Ref": "AppsDomain" }, ""]]},
         "Type" : "CNAME",
-        "TTL" : "500",
+        "TTL" : "60",
         "ResourceRecords" : [ { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]} ]
       }
     },
