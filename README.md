@@ -28,4 +28,5 @@ doesn't encrypt the backend SSL certificates.
 This demo was created using Ubuntu 15.04 with Python 2.7.  It might work with other stacks but it hasn't been tested.
 Some of the demos need some existing AWS resources (e.g. a DynamoDB Table).  If there is sufficient interest, I'll put 
 together a CloudFormation template to set these up; in the mean time there are instructions on what you need in the 
-various READMEs.
+various READMEs.  The demo will only work in `us-east-1` or `eu-west-1`; other regions can be supported by updating 
+the `Mapping` sections of the CloudFormation templates with details of alternative AMIs.
