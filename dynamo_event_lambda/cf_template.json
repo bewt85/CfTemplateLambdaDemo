@@ -45,8 +45,14 @@
     }
   },
 
-  "Resources" : {
+  "Mappings" : {
+    "RegionMap" : {
+      "us-east-1" : {"ami": "ami-ddf13fb0"},
+      "eu-west-1" : {"ami": "ami-a4d44ed7"}
+    }
+  },
 
+  "Resources" : {
     "AppSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
@@ -196,7 +202,7 @@
         },
         "KeyName" : { "Ref" : "KeyName" },
         "AssociatePublicIpAddress": "true",
-        "ImageId" : "ami-a4d44ed7",
+        "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "ami" ] },
         "SecurityGroups" : [ { "Fn::GetAtt": ["AppSecurityGroup", "GroupId"] } ],
         "InstanceType" : "t2.nano",
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -222,7 +228,6 @@
             " - /bin/chmod 0744 /home/ubuntu/demo_folder/server_setup/setup.sh",
             " - /home/ubuntu/demo_folder/server_setup/setup.sh",
             " - /bin/systemctl start app",
-            " - /bin/chmod 0744 /home/ubuntu/demo_folder/server_setup/setup.sh",
             { "Fn::Join" : ["", [
             " - /home/ubuntu/demo_folder/server_setup/venv/bin/python /home/ubuntu/demo_folder/server_setup/setup_backend_SSL.py ",  { "Ref": "CertificateBucket" }, " backend-certificate-", {"Ref": "AppName" }, ".json"
             ]]}
