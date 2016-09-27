@@ -11,4 +11,4 @@ source venv/bin/activate
 set -u
 
 export $(cat /etc/app.conf | xargs)
-twistd -n web --wsgi hello.app -p 8080
+gunicorn hello:app -b 0.0.0.0:8080
