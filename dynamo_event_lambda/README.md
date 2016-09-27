@@ -5,12 +5,13 @@ instances.  It also monitors changes reported by stacks to update the status fie
 
 ## Pre-requisites
 
-This demo will only work in `eu-west-1` to `us-east-1`.
+This demo will only work in `eu-west-1` or `us-east-1`.
 
-* A DynamoDB table called `apps-db`
+* A DynamoDB table called `apps-demo`
+  * Primary partition key: Name
+  * Uncheck "Use default settings"
   * Read capacity: 1;
   * Write Capacity: 1;
-  * Primary partition key: Name
   * No sort key
 * An SNS Topic called `AppDemoCloudFormationSns`
 * A (sub-)domain managed by Route53
@@ -22,12 +23,17 @@ This demo will only work in `eu-west-1` to `us-east-1`.
 
 * Creating an IAM policy and IAM role with permissions at least as generous as the [lambda_policy](lambda_policy.json)
 * Update your config.json with the details of your pre-requisites
-* Create a new Python 2.7 Lambda function called `AppDemoReactorLambda`
-* Use the new role you created
 * Run [package.sh](package.sh) on a Linux machine (it might work on OSX but it isn't tested)
-* Upload the ZIP file which is created to your new Lambda
-* Hook up to listen to events from the SNS Topic called `AppDemoCloudFormationSns`
-* Hook up to listen to events from the DynamoDB table called `apps-db`
+* Create a new Python 2.7 Lambda function called `AppDemoReactorLambda`
+  * Set the runtime to `Python 2.7`
+  * Upload the ZIP file which is created to your new Lambda
+  * Set the handler to `reactor.lambda_handler`
+  * Use the new role you created
+  * Set the Timeout to 30 seconds
+  * Leave the default VPC settings
+* In the triggers for the new lambda
+  * Hook up to listen to events from the SNS Topic called `AppDemoCloudFormationSns`
+  * Hook up to listen to events from the DynamoDB table called `apps-db` (keep the other default settings)
 
 ## Usage
 
