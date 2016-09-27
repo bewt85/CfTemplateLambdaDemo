@@ -10,10 +10,13 @@ it already is.
 
 * Creating an IAM policy and IAM role with permissions at least as generous as the [lambda_policy](lambda_policy.json)
 * Create a private S3 bucket for the certificates
-* Create a new Python 2.7 Lambda function called `CreateElbBackendCertificates`
-* Use the new role you created
 * Run [package.sh](package.sh) on a Linux machine (it might work on OSX but it isn't tested)
+* Create a new Python 2.7 Lambda function called `CreateElbBackendCertificates`
 * Upload the ZIP file which is created to your new Lambda
+* Set the "handler" to `lambda_function.handler`
+* Set the lambda timeout to 30 seconds (128 MB of RAM is loads for this)
+* Leave the VPC as default
+* Use the new role you created
 
 ## Dependencies
 
