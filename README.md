@@ -7,7 +7,7 @@ and how it can also be used to create a rudimentary Platform as a Service by lis
 
 I walked through this demo at the UK AWS User Group in August 2016; it gives some useful context.
 
-[![Video walkthrough of how to use lambdas with cloudformation](https://img.youtube.com/vi/_iDDut4vKhg/0.jpg)](https://www.youtube.com/watch?v=_iDDut4vKhg)
+[![Video walkthrough of how to use lambdas with cloudformation](https://github.com/bewt85/CfTemplateLambdaDemo/raw/master/aws_demo_screenshot.png)](https://www.youtube.com/watch?v=_iDDut4vKhg)
 
 ## CloudFormation Templates
 
