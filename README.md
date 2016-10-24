@@ -3,6 +3,12 @@
 This project includes some simple and more advanced CloudFormation examples.  It also shows how Lambda can be used to power a Custom Resource within a more advanced example 
 and how it can also be used to create a rudimentary Platform as a Service by listening for events.
 
+## Video walkthrough
+
+I walked through this demo at the UK AWS User Group in August 2016; it gives some useful context.
+
+[![Video walkthrough of how to use lambdas with cloudformation](https://img.youtube.com/vi/_iDDut4vKhg/0.jpg)](https://www.youtube.com/watch?v=_iDDut4vKhg)
+
 ## CloudFormation Templates
 
 There are three [demo CloudFormation templates](cloudformation_template_examples):
